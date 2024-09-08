@@ -3,7 +3,7 @@ import { defineEventHandler, createError } from 'h3'
 import { users } from '../../utils/repositories/users';
 
 export default defineEventHandler(async (event) => {
-  // Verificar que el método sea POST
+  // Verificar que sea POST
   if (event.req.method !== 'POST') {
     throw createError({
       statusCode: 405,
@@ -31,9 +31,10 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-
-
+  event.res.statusCode = 204;
+  
   return {
     message: 'Successfully logged out',
   };
+  
 });

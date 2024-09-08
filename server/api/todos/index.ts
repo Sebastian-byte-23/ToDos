@@ -1,40 +1,23 @@
-import { defineEventHandler, readBody, createError } from 'h3';
-import { v4 as uuidv4 } from 'uuid';
+import { defineEventHandler, readBody } from 'h3';
+import { toDos, addToDo } from '../../utils/repositories/toDos'; // Importa desde la ubicación de donde este
 
-// Simulación de base de datos en memoria
-const todos: Array<{ id: string, title: string, completed: boolean }> = [];
-
+// listar y crear
 export default defineEventHandler(async (event) => {
-  if (event.req.method === 'POST') {
-    try {
-      const body = await readBody(event);
-      const { title } = body as { title: string };
+  const method = event.req.method;
 
-      if (!title || typeof title !== 'string') {
-        return createError({ statusCode: 400, message: 'El título no fue enviado correctamente' });
-      }
-
-      const newTodo = {
-        id: uuidv4(),
-        title,
-        completed: false,
-      };
-
-      todos.push(newTodo);
-
-      return newTodo;
-    } catch (error) {
-      console.error('Error al crear la tarea:', error);
-      return createError({ statusCode: 500, message: 'Error al crear la tarea' });
+  if (method === 'GET') {
+    return toDos; // Devolvuelve los ToDo
+  } else if (method === 'POST') {
+    const body = await readBody(event);
+    if (!body.title) {
+      event.res.statusCode = 400;
+      return { error: 'El título es obligatorio' };
     }
-  } else if (event.req.method === 'GET') {
-    try {
-      return todos;
-    } catch (error) {
-      console.error('Error al listar las tareas:', error);
-      return createError({ statusCode: 500, message: 'Error al listar las tareas' });
-    }
-  } else {
-    return createError({ statusCode: 405, message: 'Método no permitido' });
+
+    const newToDo = addToDo(body.title); 
+    return newToDo; // Devolver el ToDo recién creado
   }
+
+  event.res.statusCode = 405;
+  return { error: 'Método no permitido' };
 });
